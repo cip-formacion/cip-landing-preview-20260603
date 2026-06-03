@@ -227,8 +227,9 @@
   }
 
   .datos {
-    width: calc(100% - 32px);
-    margin: -42px auto 0;
+    width: calc(100% - 64px);
+    max-width: 900px;
+    margin: -36px auto 0;
     padding: 0 0 8px;
     background: transparent;
     z-index: 2;
@@ -236,15 +237,15 @@
 
   .datos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
     margin: 0 auto;
   }
 
   .dato-item {
-    padding: 28px 22px;
+    padding: 18px 16px;
     text-align: left;
-    border-radius: 24px;
+    border-radius: 18px;
     border: 1px solid rgba(255,255,255,0.7);
     background: rgba(255,255,255,0.82);
     backdrop-filter: blur(14px);
@@ -252,9 +253,9 @@
   }
 
   .dato-item .numero {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-family: 'Sora', sans-serif;
-    font-size: 42px;
+    font-size: 30px;
     line-height: 0.95;
     letter-spacing: -0.05em;
     color: var(--azul);
@@ -262,7 +263,7 @@
 
   .dato-item .descripcion {
     max-width: none;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--texto-suave);
     line-height: 1.5;
