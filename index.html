@@ -677,6 +677,12 @@
     box-shadow: 0 0 0 4px rgba(47,95,190,0.1);
   }
 
+  .form-group input:disabled,
+  .btn-form:disabled {
+    opacity: 0.7;
+    cursor: wait;
+  }
+
   .btn-form {
     width: 100%;
     margin-top: 8px;
@@ -692,6 +698,22 @@
     font-weight: 600;
     color: #72809f;
     line-height: 1.6;
+  }
+
+  .form-status {
+    min-height: 22px;
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .form-status.is-error {
+    color: #b42318;
+  }
+
+  .form-status.is-success {
+    color: #0f766e;
   }
 
   .footer {
@@ -994,22 +1016,23 @@
   <h2 class="seccion-titulo">Reserva tu plaza gratis</h2>
   <p class="seccion-subtitulo">17 de junio de 2026 · 18:00h · En directo por YouTube</p>
 
-  <div class="form-container">
+  <form class="form-container" id="registro-form">
     <div class="form-group">
       <label for="nombre">Nombre</label>
-      <input type="text" id="nombre" name="nombre" placeholder="Tu nombre">
+      <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
     </div>
     <div class="form-group">
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" placeholder="tu@email.com">
+      <input type="email" id="email" name="email" placeholder="tu@email.com" required>
     </div>
     <div class="form-group">
       <label for="telefono">Teléfono (opcional)</label>
       <input type="tel" id="telefono" name="telefono" placeholder="+34 600 000 000">
     </div>
-    <button type="button" class="btn-form">Reservar mi plaza gratis →</button>
+    <button type="submit" class="btn-form">Reservar mi plaza gratis →</button>
+    <p class="form-status" id="form-status" aria-live="polite"></p>
     <p class="form-legal">Al registrarte aceptas recibir información sobre la charla y sobre el Máster en Asesoría Fiscal de CIP por email. Puedes darte de baja en cualquier momento.</p>
-  </div>
+  </form>
 </section>
 
 <!-- FOOTER -->
@@ -1023,12 +1046,77 @@
 </div>
 
 <script>
+  var CIP_FORM_WEBHOOK_URL = window.CIP_FORM_WEBHOOK_URL || '';
+
   document.querySelectorAll('a[href="#registro"]').forEach(function(a) {
     a.addEventListener('click', function(e) {
       e.preventDefault();
       document.getElementById('registro').scrollIntoView({ behavior: 'smooth' });
     });
   });
+
+  (function() {
+    var form = document.getElementById('registro-form');
+    var status = document.getElementById('form-status');
+    var submitButton = form ? form.querySelector('.btn-form') : null;
+
+    function setStatus(message, type) {
+      if (!status) return;
+      status.textContent = message || '';
+      status.className = 'form-status' + (type ? ' is-' + type : '');
+    }
+
+    function setSubmitting(isSubmitting) {
+      if (!form || !submitButton) return;
+      Array.prototype.forEach.call(form.querySelectorAll('input, button'), function(element) {
+        element.disabled = isSubmitting;
+      });
+      submitButton.textContent = isSubmitting ? 'Enviando...' : 'Reservar mi plaza gratis →';
+    }
+
+    if (!form) return;
+
+    form.addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      if (!CIP_FORM_WEBHOOK_URL) {
+        setStatus('Falta conectar el formulario con Google Sheets.', 'error');
+        return;
+      }
+
+      var payload = {
+        timestamp: new Date().toISOString(),
+        nombre: form.nombre.value.trim(),
+        email: form.email.value.trim(),
+        telefono: form.telefono.value.trim(),
+        origen: 'cip-landing-preview'
+      };
+
+      setStatus('', '');
+      setSubmitting(true);
+
+      try {
+        var response = await fetch(CIP_FORM_WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+
+        form.reset();
+        setStatus('Reserva enviada correctamente.', 'success');
+      } catch (error) {
+        setStatus('No se pudo enviar la reserva. Revisa la conexión con Google Sheets.', 'error');
+      } finally {
+        setSubmitting(false);
+      }
+    });
+  })();
 </script>
 
 </body>
